@@ -17,7 +17,10 @@ from dotenv import load_dotenv
 
 def process_github_repo(owner_name, repo_name, model):
     url_to_process = f"https://api.github.com/repos/{owner_name}/{repo_name}/readme"
-    headers = {"Accept": "application/vnd.github.v3.raw"}
+    headers = {
+        "Accept": "application/vnd.github.v3.raw",
+        "Authorization": f"Bearer {os.getenv('GH_API_KEY')}",
+    }
     res = requests.get(url_to_process, headers=headers)
 
     text_to_process = res.text.replace("\n", " ").replace("\r", " ")
