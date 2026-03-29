@@ -4,3 +4,5 @@
 *.bin
 *.sql
 *.db
+.env
+*.db*

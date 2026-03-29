@@ -5,7 +5,9 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "dotenv>=0.9.9",
     "fasttext>=0.9.3",
+    "libsql>=0.1.11",
     "pandas>=3.0.1",
     "pyarrow>=23.0.1",
 ]

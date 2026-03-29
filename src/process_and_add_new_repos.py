@@ -7,11 +7,26 @@
 #     put it in repos table
 # if not:
 #     put it in quarantined_repos
+import libsql
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 def main():
-  
+    connection = libsql.connect(
+        database="zigistry.db",
+        sync_url=os.getenv("DATABASE_URL"),
+        auth_token=os.getenv("API_KEY"),
+    )
 
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM index_new_repo")
+    rows = cursor.fetchall()
 
-
+    for row in rows:
+        print(row)
 
 if __name__ == "__main__":
-  main()
+    main()
