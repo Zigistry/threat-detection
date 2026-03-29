@@ -13,6 +13,7 @@ import fasttext
 import libsql
 import requests
 from dotenv import load_dotenv
+from tokenizer import replace_github_and_codeberg_url
 
 
 def process_github_repo(owner_name, repo_name, model):
@@ -24,6 +25,7 @@ def process_github_repo(owner_name, repo_name, model):
     res = requests.get(url_to_process, headers=headers)
 
     text_to_process = res.text.replace("\n", " ").replace("\r", " ")
+    text_to_process = replace_github_and_codeberg_url(text_to_process)
     print(
         model.predict(text_to_process), f"https://github.com/{owner_name}/{repo_name}"
     )
