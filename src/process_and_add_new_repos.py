@@ -21,7 +21,9 @@ def process_github_repo(owner_name, repo_name, model):
     res = requests.get(url_to_process, headers=headers)
 
     text_to_process = res.text.replace("\n", " ").replace("\r", " ")
-    print(model.predict(text_to_process))
+    print(
+        model.predict(text_to_process), f"https://github.com/{owner_name}/{repo_name}"
+    )
 
 
 def process_codeberg_repo(owner_name, repo_name):

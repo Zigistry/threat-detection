@@ -7,9 +7,10 @@ import pandas as pd
 def paraquet_to_fasttext_kind_of_format(input_file, output_file):
     df = pd.read_parquet(input_file)
     with open(output_file, "w") as output_train_file:
-        for i, j in zip(df["label"], df["readme_content"]):
+        for i, j in zip(df["if_is_valid_repo"], df["readme_content"]):
             j = j.replace("\n", " ").replace("\r", " ")
-            output_train_file.write(i + " " + j + "\n")
+            label = "__label__good" if i else "__label__threat"
+            output_train_file.write(label + " " + j + "\n")
 
 
 def main():
