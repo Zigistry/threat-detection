@@ -9,7 +9,7 @@ def paraquet_to_fasttext_kind_of_format(input_file, output_file):
     with open(output_file, "w") as output_train_file:
         for i, j in zip(df["if_is_valid_repo"], df["readme_content"]):
             j = j.replace("\n", " ").replace("\r", " ")
-            label = "__label__good" if i == "True" else "__label__threat"
+            label = "__label__good" if i else "__label__threat"
             output_train_file.write(label + " " + j + "\n")
 
 
