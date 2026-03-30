@@ -21,7 +21,8 @@ from tokenizer import replace_github_and_codeberg_url
 def check_if_text_good(text, model):
     text = text.replace("\n", " ").replace("\r", " ")
     text = replace_github_and_codeberg_url(text)
-    return model.predict(text)[0] == ("__label__good",)
+    label = model.predict(text)[0][0]
+    return label == "__label__good"
 
 
 def process_github_repo(owner_name, repo_name):
@@ -30,7 +31,7 @@ def process_github_repo(owner_name, repo_name):
         "Accept": "application/vnd.github.v3.raw",
         "Authorization": f"Bearer {os.getenv('GH_API_KEY')}",
     }
-    res = requests.get(url_to_process, headers=headers, timeout=10)
+    res = requests.get(url_to_process, headers=headers, timeout=20)
 
     if res.status_code == 404:
         return ""
@@ -41,11 +42,33 @@ def process_github_repo(owner_name, repo_name):
     return res.text
 
 
+POSSIBLE_README_NAMES = [
+    "README.md",
+    "readme.md",
+    "README.MD",
+    "README",
+    "README.txt",
+    "README.rst",
+    "Readme.md",
+]
+
+
 def process_codeberg_repo(owner_name, repo_name):
-    url_to_process = (
-        f"https://codeberg.org/{owner_name}/{repo_name}/raw/branch/main/README.md"
-    )
-    res = requests.get(url_to_process, timeout=10)
+    res = None
+    for i in POSSIBLE_README_NAMES:
+        url_to_process = (
+            f"https://codeberg.org/{owner_name}/{repo_name}/raw/branch/HEAD/{i}"
+        )
+        result = requests.get(url_to_process, timeout=20)
+        if result.status_code == 404:
+            continue
+        if result.status_code == 200:
+            res = result
+            break
+        if result.status_code != 200:
+            sys.exit(1)
+    if not res:
+        return ""
 
     if res.status_code == 404:
         return ""
@@ -72,24 +95,29 @@ def main():
     cursor.execute("SELECT * FROM index_new_repo")
     rows = cursor.fetchall()
 
-    for row in rows:
+    for i, row in enumerate(rows):
         provider, owner_name, repo_name = row[0].split("/")
         readme_text = ""
         if provider == "gh":
+            print(f"{i}) https://github.com/{owner_name}/{repo_name}/", end="")
             readme_text = process_github_repo(owner_name, repo_name)
         else:
+            print(f"{i}) https://codeberg.org/{owner_name}/{repo_name}/", end="")
+
             readme_text = process_codeberg_repo(owner_name, repo_name)
 
         if readme_text == "" or check_if_text_good(readme_text, model):
             cursor.execute(
-                "INSERT OR IGNORE INTO safe_to_index_new_repo VALUES (?, ?, ?)",
-                (provider, owner_name, repo_name),
+                "INSERT OR IGNORE INTO safe_to_index_new_repo VALUES (?, ?)",
+                (row[0], row[1]),
             )
+            print("........ IS OK!!!!!")
         else:
             cursor.execute(
-                "INSERT OR IGNORE INTO quarantined_repos VALUES (?, ?, ?)",
-                (provider, owner_name, repo_name),
+                "INSERT OR IGNORE INTO quarantined_repos VALUES (?, ?)",
+                (row[0], row[1]),
             )
+            print("........ SEEMS LIKE THREAT!!!!!!!!")
 
     cursor.execute("DELETE FROM index_new_repo")
 
