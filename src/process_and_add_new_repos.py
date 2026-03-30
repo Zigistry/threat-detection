@@ -4,16 +4,23 @@
 # then check using my spam detector algo, wether
 # the repo is safe to index or not.
 # if repo is safe:
-#     put it in repos table
+#     put it in safe_to_index_new_repo table
 # if not:
-#     put it in quarantined_repos
+#     put it in quarantined_repos table
 import os
+import sys
 
 import fasttext
 import libsql
 import requests
 from dotenv import load_dotenv
 from tokenizer import replace_github_and_codeberg_url
+
+
+def check_if_text_good(text, model):
+    text = text.replace("\n", " ").replace("\r", " ")
+    text = replace_github_and_codeberg_url(text)
+    return model.predict(text)[0] == ('__label__good',)
 
 
 def process_github_repo(owner_name, repo_name, model):
@@ -24,15 +31,26 @@ def process_github_repo(owner_name, repo_name, model):
     }
     res = requests.get(url_to_process, headers=headers)
 
-    text_to_process = res.text.replace("\n", " ").replace("\r", " ")
-    text_to_process = replace_github_and_codeberg_url(text_to_process)
-    print(
-        model.predict(text_to_process), f"https://github.com/{owner_name}/{repo_name}"
-    )
+    if res.status_code == 404:
+        return ""
+
+    if res.status_code != 200:
+        sys.exit(1)
+
+    return res.text
 
 
 def process_codeberg_repo(owner_name, repo_name):
-    pass
+    url_to_process = f"https://codeberg.org/{owner_name}/{repo_name}/raw/branch/main/README.md"
+    res = requests.get(url_to_process)
+
+    if res.status_code == 404:
+        return ""
+
+    if res.status_code != 200:
+        sys.exit(1)
+
+    return res.text
 
 
 def main():
@@ -50,11 +68,18 @@ def main():
 
     for row in rows:
         provider, owner_name, repo_name = row[0].split("/")
+        readme_text = ""
         if provider == "gh":
-            process_github_repo(owner_name, repo_name, model)
+            readme_text = process_github_repo(owner_name, repo_name, model)
         else:
-            process_codeberg_repo(owner_name, repo_name)
+            readme_text = process_codeberg_repo(owner_name, repo_name)
 
+        if readme_text == "" or check_if_text_good(readme_text, model):
+            cursor.execute("INSERT INTO safe_to_index_new_repo VALUES (?, ?, ?)", (provider, owner_name, repo_name))
+        else:
+            cursor.execute("INSERT INTO quarantined_repos VALUES (?, ?, ?)", (provider, owner_name, repo_name))
+
+    cursor.execute("DELETE * FROM index_new_repo")
 
 if __name__ == "__main__":
     main()
