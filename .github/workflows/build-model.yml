@@ -1,0 +1,25 @@
+name: build model
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        run: curl -Ls https://astral.sh/uv/install.sh | sh
+      - name: Set up Python
+        run: uv python install 3.14
+      - name: sync deps.
+        run: uv sync
+      - name: Run process script
+        run: uv run python src/train.py
+      - name: Upload model
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload threat-detection-model model.bin --clobber
