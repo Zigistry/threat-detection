@@ -15,7 +15,7 @@ jobs:
         run: curl -Ls https://astral.sh/uv/install.sh | sh
 
       - name: Set up Python
-        run: uv python install 3.14
+        run: uv python install 3.10
 
       - name: sync deps.
         run: uv sync
