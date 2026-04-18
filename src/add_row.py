@@ -15,7 +15,10 @@ df = pd.read_parquet("./training_data/training_data.parquet")
 readme_content = readme_content.replace("\n", " ").replace("\r", " ")
 
 row_to_add = pd.DataFrame(
-    {"readme_content": [readme_content], "if_is_valid_repo": [if_is_valid_repo_processed]}
+    {
+        "readme_content": [readme_content],
+        "if_is_valid_repo": [if_is_valid_repo_processed],
+    }
 )
 
 df = pd.concat([df, row_to_add], ignore_index=True)

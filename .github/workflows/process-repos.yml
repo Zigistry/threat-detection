@@ -1,0 +1,27 @@
+name: Process New Repos
+
+on:
+  schedule:
+    - cron: '30 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        run: curl -Ls https://astral.sh/uv/install.sh | sh
+
+      - name: Set up Python
+        run: uv python install 3.14
+
+      - name: sync deps.
+        run: uv sync
+
+      - name: Run process script
+        env:
+          GH_API_KEY: ${{ secrets.GH_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: uv run python src/process_and_add_new_repos.py

@@ -1,23 +1,24 @@
 import re
 
+
 def replace_github_and_codeberg_url(input_string):
-    # I am doing github.com because platform really 
+    # I am doing github.com because platform really
     # doesn't matter to the classification algorithm.
     input_string = str(input_string)
     input_string = re.sub(
         r"https?://(?:www\.)?github\.com/[^/\s]+/[^/\s]+(?:[^\s]*)?",
         "https://example.com/example/example",
-        input_string
+        input_string,
     )
     input_string = re.sub(
         r"https?://(?:www\.)?codeberg\.org/[^/\s]+/[^/\s]+(?:[^\s]*)?",
         "https://example.com/example/example",
-        input_string
+        input_string,
     )
     input_string = re.sub(
         r"github/[^/\s]+/[^/\s]+(?:[^\s]*)?",
         "example.com/example/example",
-        input_string
+        input_string,
     )
 
     # replace any other with example.com/2
@@ -43,9 +44,7 @@ def replace_github_and_codeberg_url(input_string):
     # Also, I can implement this in next commit that the repos, I am scanning also go through
     # this special tokenization for maximum accuracy, Maybe? I need to test this.
     input_string = re.sub(
-        r"https?://(?!example\.com)[^\s]+",
-        "https://example.com/2/",
-        input_string
+        r"https?://(?!example\.com)[^\s]+", "https://example.com/2/", input_string
     )
 
     return input_string

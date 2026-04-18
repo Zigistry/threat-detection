@@ -27,6 +27,12 @@ def main():
         thread=os.cpu_count(),
         verbose=2,
     )
+    model.quantize(
+        input="output.train.txt",
+        qnorm=True,
+        retrain=True,
+        cutoff=50000
+    )
     model.save_model("model.bin")
 
     paraquet_to_fasttext_kind_of_format(
