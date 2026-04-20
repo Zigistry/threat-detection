@@ -25,6 +25,8 @@ jobs:
 
       - name: Run process script
         env:
-          GH_API_KEY: ${{ secrets.GH_API_KEY }}
+          GH_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+          CB_API_KEY: ${{ secrets.CB_API_KEY }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          API_KEY: ${{ secrets.API_KEY }}
         run: uv run python src/process_and_add_new_repos.py
