@@ -20,6 +20,9 @@ jobs:
       - name: sync deps.
         run: uv sync
 
+      - name: download model
+        run: curl -L -o model.bin https://github.com/Zigistry/threat-detection/releases/download/threat-detection-model/model.bin
+
       - name: Run process script
         env:
           GH_API_KEY: ${{ secrets.GH_API_KEY }}
