@@ -10,8 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CB_API_KEY: ${{ secrets.CODEBERG_TOKEN }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      API_KEY: ${{ secrets.API_KEY }}
+      GH_API_KEY: ${{ secrets.GITHUB_TOKEN }}
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
 
     steps:
