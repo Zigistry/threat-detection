@@ -100,8 +100,6 @@ def main():
     model = fasttext.load_model("model.bin")
     connection = libsql.connect(
         database="zigistry.db",
-        sync_url=os.getenv("DATABASE_URL"),
-        auth_token=os.getenv("API_KEY"),
     )
 
     cursor = connection.cursor()

@@ -2,12 +2,18 @@ name: Process New Repos
 
 on:
   schedule:
-    - cron: '30 1 * * *'
+    - cron: "30 1 * * *"
   workflow_dispatch:
 
 jobs:
   process:
     runs-on: ubuntu-latest
+    env:
+      CB_API_KEY: ${{ secrets.CODEBERG_TOKEN }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      API_KEY: ${{ secrets.API_KEY }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -23,10 +29,11 @@ jobs:
       - name: download model
         run: curl -L -o model.bin https://github.com/Zigistry/threat-detection/releases/download/threat-detection-model/model.bin
 
+      - name: Download the database
+        run: wget -O ./zigistry.db https://huggingface.co/buckets/Zigistry/Zigistry/resolve/zigistry.db?download=true
+
       - name: Run process script
-        env:
-          GH_API_KEY: ${{ secrets.GITHUB_TOKEN }}
-          CB_API_KEY: ${{ secrets.CB_API_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          API_KEY: ${{ secrets.API_KEY }}
         run: uv run python src/process_and_add_new_repos.py
+
+      - name: push updated database
+        run: hf cp ./zigistry.db hf://buckets/Zigistry/Zigistry/zigistry.db
