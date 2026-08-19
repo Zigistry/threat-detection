@@ -43,16 +43,19 @@ def process_github_repo(owner_name, repo_name):
         "Accept": "application/vnd.github.v3.raw",
         "Authorization": f"Bearer {os.getenv('GH_API_KEY')}",
     }
-    res = requests.get(url_to_process, headers=headers, timeout=10)
-
-    if res.status_code == 404:
-        return ""
-
-    if res.status_code != 200:
-        print(f"  ERROR: {res.status_code}")
-        sys.exit(1)
-
-    return res.text
+    for attempt in range(3):
+        res = requests.get(url_to_process, headers=headers, timeout=10)
+        if res.status_code == 404:
+            return ""
+        if res.status_code != 200:
+            if attempt < 2:
+                print(f"  {res.status_code}, retrying...")
+                time.sleep(2 ** attempt)
+                continue
+            print(f"  error: {res.status_code}")
+            return ""
+        return res.text
+    return ""
 
 
 POSSIBLE_README_NAMES = [
@@ -72,22 +75,23 @@ def process_codeberg_repo(owner_name, repo_name):
         url_to_process = (
             f"https://codeberg.org/{owner_name}/{repo_name}/raw/branch/HEAD/{i}"
         )
-        result = requests.get(url_to_process, timeout=10)
-        if result.status_code == 404:
-            continue
-        if result.status_code == 200:
-            res = result
+        for attempt in range(3):
+            result = requests.get(url_to_process, timeout=10)
+            if result.status_code == 404:
+                break
+            if result.status_code == 200:
+                res = result
+                break
+            if attempt < 2:
+                print(f"  {result.status_code}, retrying...")
+                time.sleep(2 ** attempt)
+                continue
+            print(f"  error: {result.status_code}")
+            return ""
+        if result.status_code in (404, 200):
             break
-        if result.status_code != 200:
-            sys.exit(1)
     if not res:
         return ""
-
-    if res.status_code == 404:
-        return ""
-
-    if res.status_code != 200:
-        sys.exit(1)
 
     if not res.text:
         return ""
